@@ -173,6 +173,11 @@
   }
   .stepper button:hover { background: var(--navy); border-color: var(--navy); color: #fff; }
   .sep { font-size: 20px; font-weight: 600; color: var(--gold); padding-bottom: 42px; }
+  .totalgoals {
+    margin-top: 18px; padding-top: 16px; border-top: 1px solid #DCE3EE;
+    text-align: center; font-size: 13px; color: var(--muted);
+  }
+  .totalgoals b { color: var(--navy); font-size: 15px; }
 
   /* ---------- pledge ---------- */
   .pledge-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
@@ -299,7 +304,6 @@
 <nav class="tabs" role="tablist">
   <button role="tab" id="t-predict" aria-selected="true" aria-controls="p-predict">Predict</button>
   <button role="tab" id="t-board" aria-selected="false" aria-controls="p-board">Table</button>
-  <button role="tab" id="t-result" aria-selected="false" aria-controls="p-result">Result</button>
 </nav>
 
 <!-- PREDICT -->
@@ -329,6 +333,16 @@
     </select>
   </label>
 
+  <label class="fld">
+    <span class="lab">First team to score</span>
+    <span class="hint">A side can score first and still lose, so this is its own call. Worth two points.</span>
+    <select id="f-first">
+      <option value="Supported Living">Supported Living</option>
+      <option value="Residential">Residential</option>
+      <option value="No goals">Nobody, it finishes goalless</option>
+    </select>
+  </label>
+
   <div class="scoreline">
     <div class="cap">Your full time score</div>
     <div class="score-grid">
@@ -350,6 +364,7 @@
         </div>
       </div>
     </div>
+    <div class="totalgoals">That is <b id="d-total">2</b> goals in the game, worth a point on its own if you call it right.</div>
   </div>
 
   <label class="fld">
@@ -391,53 +406,16 @@
 
   <div class="rules">
     <h3>How points are scored</h3>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 12px">Each market settles on its own, so a perfect card takes the lot.</p>
     <dl>
       <div class="r"><span>Exact full time score</span><b>5</b></div>
       <div class="r"><span>Right result, wrong score</span><b>2</b></div>
       <div class="r"><span>Goal difference bonus</span><b>1</b></div>
+      <div class="r"><span>Total goals in the game</span><b>1</b></div>
+      <div class="r"><span>First team to score</span><b>2</b></div>
       <div class="r"><span>First goalscorer</span><b>3</b></div>
+      <div class="r"><span>Most you can win</span><b>11</b></div>
     </dl>
-  </div>
-</section>
-
-<!-- RESULT -->
-<section class="panel" id="p-result" role="tabpanel" aria-labelledby="t-result" hidden>
-  <div id="result-msg"></div>
-  <p class="note" style="margin:0 0 28px">For the organiser. Enter the final score once the referee has confirmed it, and the table settles itself.</p>
-
-  <div class="scoreline">
-    <div class="cap">Full time score</div>
-    <div class="score-grid">
-      <div class="score-col">
-        <div class="nm">Supported<br>Living</div>
-        <div class="digit" id="d-rhome">0</div>
-        <div class="stepper">
-          <button type="button" data-adj="rhome:-1" aria-label="One fewer goal for Supported Living">&minus;</button>
-          <button type="button" data-adj="rhome:1" aria-label="One more goal for Supported Living">+</button>
-        </div>
-      </div>
-      <div class="sep">V</div>
-      <div class="score-col">
-        <div class="nm">Residential</div>
-        <div class="digit" id="d-raway">0</div>
-        <div class="stepper">
-          <button type="button" data-adj="raway:-1" aria-label="One fewer goal for Residential">&minus;</button>
-          <button type="button" data-adj="raway:1" aria-label="One more goal for Residential">+</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <label class="fld">
-    <span class="lab">First goalscorer</span>
-    <span class="hint">Spell it as entrants would have. Leave blank if there were no goals or the first was an own goal.</span>
-    <input type="text" id="f-rscorer" placeholder="Player name" maxlength="40">
-  </label>
-
-  <div class="btn-stack">
-    <button class="cta" id="settle-btn">Publish result and settle table</button>
-    <button class="ghost" id="unsettle-btn">Reopen predictions</button>
-    <button class="ghost danger" id="clear-btn">Clear all entries</button>
   </div>
 </section>
 
@@ -451,7 +429,7 @@
 
   var state = {
     preds: [], result: null,
-    pick: { home: 1, away: 1 }, rpick: { home: 0, away: 0 },
+pick: { home: 1, away: 1 },
     pledge: 5, fallback: false
   };
 
@@ -484,6 +462,8 @@
     var r = state.result;
     if (!r) return null;
     var pts = 0;
+
+    /* Market 1: the scoreline */
     if (p.home === r.home && p.away === r.away) {
       pts += 5;
     } else {
@@ -493,9 +473,17 @@
         if ((p.home - p.away) === (r.home - r.away)) pts += 1;
       }
     }
+    /* Market 2: total goals, read off the scoreline rather than asked twice */
+    if ((p.home + p.away) === (r.home + r.away)) pts += 1;
+
+    /* Market 3: first team to score */
+    if (p.first && r.first && p.first === r.first) pts += 2;
+
+    /* Market 4: first goalscorer */
     var ps = (p.scorer || '').trim().toLowerCase();
     var rs = (r.scorer || '').trim().toLowerCase();
     if (ps && rs && ps === rs) pts += 3;
+
     return pts;
   }
 
@@ -513,8 +501,7 @@
   function renderDigits() {
     $('d-home').textContent = state.pick.home;
     $('d-away').textContent = state.pick.away;
-    $('d-rhome').textContent = state.rpick.home;
-    $('d-raway').textContent = state.rpick.away;
+    $('d-total').textContent = state.pick.home + state.pick.away;
   }
 
   function renderBoard() {
@@ -551,7 +538,7 @@
     el.innerHTML = list.map(function (p, i) {
       var pts = state.result ? p._pts : null;
       var meta = esc(p.side) + ' · ' + money(p.pledge) +
-        (p.method ? ' ' + esc(p.method.toLowerCase()) : '') +
+        (p.first ? ' · first ' + esc(p.first === 'No goals' ? 'goalless' : p.first) : '') +
         (p.scorer ? ' · ' + esc(p.scorer) : '');
       return '<div class="row">' +
         (state.result ? '<div class="rank">' + (i + 1) + '</div>' : '') +
@@ -567,9 +554,7 @@
     if (t) {
       var parts = t.getAttribute('data-adj').split(':');
       var which = parts[0], delta = Number(parts[1]);
-      var bucket = which.charAt(0) === 'r' ? state.rpick : state.pick;
-      var side = which.replace('r', '');
-      bucket[side] = Math.max(0, Math.min(20, bucket[side] + delta));
+      state.pick[which] = Math.max(0, Math.min(20, state.pick[which] + delta));
       renderDigits();
       return;
     }
@@ -590,9 +575,9 @@
     });
   });
 
-  ['predict', 'board', 'result'].forEach(function (k) {
+  ['predict', 'board'].forEach(function (k) {
     $('t-' + k).addEventListener('click', function () {
-      ['predict', 'board', 'result'].forEach(function (o) {
+      ['predict', 'board'].forEach(function (o) {
         $('t-' + o).setAttribute('aria-selected', String(o === k));
         $('p-' + o).hidden = (o !== k);
       });
@@ -619,6 +604,7 @@
       name: name,
       side: $('f-side').value,
       method: $('f-method').value,
+      first: $('f-first').value,
       home: state.pick.home,
       away: state.pick.away,
       scorer: $('f-scorer').value.trim(),
@@ -639,31 +625,6 @@
     }
   });
 
-  $('settle-btn').addEventListener('click', async function () {
-    var msg = $('result-msg');
-    await readAll();
-    state.result = { home: state.rpick.home, away: state.rpick.away, scorer: $('f-rscorer').value.trim() };
-    var ok = await writeResult();
-    if (ok) { flash(msg, 'ok', 'Result published. The table is settled.'); renderBoard(); }
-    else { flash(msg, 'bad', 'The result did not save. Try again.'); }
-  });
-
-  $('unsettle-btn').addEventListener('click', async function () {
-    if (!confirm('Reopen predictions and remove the published result?')) return;
-    state.result = null;
-    await writeResult();
-    flash($('result-msg'), 'ok', 'Predictions are open again.');
-    renderBoard();
-  });
-
-  $('clear-btn').addEventListener('click', async function () {
-    if (!confirm('Delete every entry and the result? This cannot be undone.')) return;
-    state.preds = []; state.result = null;
-    await writePreds(); await writeResult();
-    flash($('result-msg'), 'ok', 'All entries cleared.');
-    renderBoard();
-  });
-
   (async function () {
     await readAll();
     renderDigits();
@@ -677,4 +638,3 @@
 
 </body>
 </html>
-<script>["t-result","p-result"].forEach(function(i){var e=document.getElementById(i);if(e)e.remove();});</script>

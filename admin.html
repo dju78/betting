@@ -188,7 +188,10 @@
       <select id="e-method"><option>Cash</option><option>Card</option><option>CRY page</option></select>
     </div>
   </div>
-  <div class="grid g2">
+  <div class="grid g3">
+    <div><label class="lab" for="e-first">First team to score</label>
+      <select id="e-first"><option>Supported Living</option><option>Residential</option><option value="No goals">Goalless</option></select>
+    </div>
     <div><label class="lab" for="e-scorer">First goalscorer</label><input type="text" id="e-scorer" maxlength="40" placeholder="Optional"></div>
     <div><label class="lab" for="e-notes">Notes</label><input type="text" id="e-notes" maxlength="60" placeholder="Optional"></div>
   </div>
@@ -258,13 +261,18 @@
   <div class="grid g3">
     <div><label class="lab" for="r-home">Supported Living</label><input type="number" id="r-home" min="0" max="20" value="0"></div>
     <div><label class="lab" for="r-away">Residential</label><input type="number" id="r-away" min="0" max="20" value="0"></div>
+    <div><label class="lab" for="r-first">First team to score</label>
+      <select id="r-first"><option>Supported Living</option><option>Residential</option><option value="No goals">Goalless</option></select>
+    </div>
+  </div>
+  <div class="grid g2">
     <div><label class="lab" for="r-scorer">First goalscorer</label><input type="text" id="r-scorer" maxlength="40" placeholder="Blank if none or own goal"></div>
   </div>
   <div class="btnrow">
     <button class="btn" id="settle">Publish result and settle</button>
     <button class="btn2" id="unsettle">Reopen predictions</button>
   </div>
-  <p class="note">Confirm the score with the referee or match secretary before publishing. Spell the goalscorer as entrants would have.</p>
+  <p class="note">Five markets settle from this: the scoreline worth up to five, total goals one, first team to score two, and first goalscorer three, eleven in all. Confirm with the referee or match secretary before publishing. Spell the goalscorer as entrants would have.</p>
 
   <h2 class="sec">Standings</h2>
   <div id="standings"></div>
@@ -365,6 +373,8 @@
       var po = Math.sign(p.home - p.away), ro = Math.sign(r.home - r.away);
       if (po === ro) { pts += 2; if ((p.home - p.away) === (r.home - r.away)) pts += 1; }
     }
+    if ((p.home + p.away) === (r.home + r.away)) pts += 1;
+    if (p.first && r.first && p.first === r.first) pts += 2;
     var ps = (p.scorer || '').trim().toLowerCase(), rs = (r.scorer || '').trim().toLowerCase();
     if (ps && rs && ps === rs) pts += 3;
     return pts;
@@ -410,6 +420,7 @@
         : '<span class="tag paid">No pledge</span>';
       return '<tr>' +
         '<td><div class="nm">' + esc(p.name) + '</div><div class="sub">' + esc(p.side) +
+          (p.first ? ' &middot; first ' + esc(p.first === 'No goals' ? 'goalless' : p.first) : '') +
           (p.scorer ? ' &middot; ' + esc(p.scorer) : '') + (c.by ? ' &middot; taken by ' + esc(c.by) : '') +
           (c.gift === 'Y' ? ' &middot; Gift Aid' : '') + '</div></td>' +
         '<td class="score">' + p.home + '&ndash;' + p.away + '</td>' +
@@ -496,7 +507,7 @@
     }
     await loadAll();
     var entry = {
-      name: name, side: $('e-side').value, method: $('e-method').value,
+      name: name, side: $('e-side').value, method: $('e-method').value, first: $('e-first').value,
       home: Math.max(0, Number($('e-home').value) || 0),
       away: Math.max(0, Number($('e-away').value) || 0),
       scorer: $('e-scorer').value.trim(),
@@ -528,7 +539,7 @@
     S.editing = null;
     ['e-name', 'e-scorer', 'e-notes'].forEach(function (id) { $(id).value = ''; });
     $('e-home').value = 1; $('e-away').value = 1; $('e-pledge').value = 5;
-    $('e-side').value = 'Supported Living'; $('e-method').value = 'Cash';
+    $('e-side').value = 'Supported Living'; $('e-method').value = 'Cash'; $('e-first').value = 'Supported Living';
     $('form-title').textContent = 'Add an entry';
     $('save-entry').textContent = 'Save entry';
     $('cancel-edit').hidden = true;
@@ -544,6 +555,7 @@
       $('e-method').value = col(p.name).method || p.method || 'Cash';
       $('e-home').value = p.home; $('e-away').value = p.away;
       $('e-scorer').value = p.scorer || ''; $('e-pledge').value = p.pledge || 0;
+      $('e-first').value = p.first || 'Supported Living';
       $('e-notes').value = p.notes || '';
       $('form-title').textContent = 'Editing ' + p.name;
       $('save-entry').textContent = 'Update entry';
@@ -605,6 +617,7 @@
     S.result = {
       home: Math.max(0, Number($('r-home').value) || 0),
       away: Math.max(0, Number($('r-away').value) || 0),
+      first: $('r-first').value,
       scorer: $('r-scorer').value.trim()
     };
     await put(KEY_R, S.result);
@@ -635,13 +648,13 @@
   }
 
   $('export-csv').addEventListener('click', function () {
-    var head = ['Name', 'Service', 'Prediction', 'Pledge', 'Received', 'Outstanding', 'Method', 'Collected by', 'Gift Aid', 'Notes'];
+    var head = ['Name', 'Service', 'Prediction', 'Pledge', 'Received', 'Outstanding', 'Method', 'Collected by', 'Gift Aid', 'Notes', 'First team', 'First scorer'];
     var rows = S.preds.slice().sort(function (a, b) { return a.name.localeCompare(b.name); })
       .map(function (p) {
         var c = col(p.name);
         return [p.name, p.side, p.home + '-' + p.away, (Number(p.pledge) || 0).toFixed(2),
           received(p).toFixed(2), outstanding(p).toFixed(2), c.method || p.method || '',
-          c.by || '', c.gift || 'N', p.notes || ''].map(csvCell).join(',');
+          c.by || '', c.gift || 'N', p.notes || '', p.first || '', p.scorer || ''].map(csvCell).join(',');
       });
     download('match-predictor-pledge-log.csv', head.join(',') + '\n' + rows.join('\n'), 'text/csv;charset=utf-8');
     flash($('data-msg'), 'ok', 'CSV downloaded. Paste the rows into cell B5 of the Pledge Log tab.');
@@ -700,7 +713,11 @@
     $('gate').hidden = true;
     $('console').hidden = false;
     await loadAll();
-    if (S.result) { $('r-home').value = S.result.home; $('r-away').value = S.result.away; $('r-scorer').value = S.result.scorer || ''; }
+    if (S.result) {
+      $('r-home').value = S.result.home; $('r-away').value = S.result.away;
+      $('r-scorer').value = S.result.scorer || '';
+      $('r-first').value = S.result.first || 'Supported Living';
+    }
     renderAll();
   }
   $('unlock').addEventListener('click', unlock);
