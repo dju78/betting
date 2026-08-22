@@ -88,14 +88,11 @@
   }
 
   .fixture { display: flex; align-items: center; gap: 14px; margin: 28px 0 26px; }
+  /* Neutral venue: neither side is home, so both cards carry equal weight. */
   .fixture .side {
-    flex: 1; text-align: center; padding: 14px 12px;
+    flex: 1; text-align: center; padding: 20px 12px;
     border: 1px solid rgba(255,255,255,.16); border-radius: 10px;
     background: rgba(255,255,255,.06);
-  }
-  .fixture .side .lbl {
-    display: block; font-size: 10.5px; letter-spacing: .14em;
-    text-transform: uppercase; color: rgba(255,255,255,.55); margin-bottom: 5px;
   }
   .fixture .side .nm { font-size: 15px; font-weight: 600; color: #fff; }
   .fixture .side.sl { border-top: 3px solid #6E8FCB; }
@@ -288,9 +285,9 @@
   <p class="standfirst">Call the full time score and pledge to Cardiac Risk in the Young. Free to enter, and a pledge of zero is welcome.</p>
 
   <div class="fixture">
-    <div class="side sl"><span class="lbl">Home</span><span class="nm">Supported Living</span></div>
-    <div class="vs">V</div>
-    <div class="side res"><span class="lbl">Away</span><span class="nm">Residential</span></div>
+    <div class="side sl"><span class="nm">Supported Living</span></div>
+    <div class="vs">VS</div>
+    <div class="side res"><span class="nm">Residential</span></div>
   </div>
 
   <dl class="facts">
