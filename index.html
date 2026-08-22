@@ -1,0 +1,679 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Match Predictor | Aldanat Care FC charity match for CRY</title>
+<meta name="description" content="Call the full time score for the Aldanat Care FC charity match, Supported Living v Residential, and pledge to Cardiac Risk in the Young. Free to enter.">
+<meta name="theme-color" content="#142442">
+<meta name="robots" content="noindex">
+<style>
+  html, body { margin: 0; padding: 0; background: #F4F6FA; }
+  body { padding: 0; -webkit-text-size-adjust: 100%; }
+  @media (min-width: 620px) { body { padding: 28px 16px 44px; } }
+</style>
+<script>
+/* Standalone build. Each device keeps its own copy of the sheet in localStorage.
+   The desk device is the master record for the event. */
+(function () {
+  var mem = {};
+  function ls() { try { return window.localStorage; } catch (e) { return null; } }
+  window.storage = {
+    get: async function (k) { var s = ls(); var v = s ? s.getItem(k) : mem[k]; return { key: k, value: v == null ? '' : v, shared: true }; },
+    set: async function (k, v) { var s = ls(); if (s) { s.setItem(k, v); } else { mem[k] = v; } return { key: k, value: v, shared: true }; },
+    delete: async function (k) { var s = ls(); if (s) { s.removeItem(k); } else { delete mem[k]; } return { key: k, deleted: true, shared: true }; },
+    list: async function () { return { keys: [], shared: true }; }
+  };
+})();
+</script>
+</head>
+<body>
+<div id="app-root">
+<style>
+  #app-root {
+    --ink: #0F1B2E;
+    --muted: #5A6478;
+    --faint: #97A0B0;
+    --line: #E2E6EC;
+    --line-soft: #EFF2F6;
+    --navy: #1B2E52;
+    --navy-deep: #142442;
+    --navy-hover: #16253F;
+    --navy-tint: #F4F6FA;
+    --gold: #B8860B;
+    --gold-bright: #E8A93C;
+    --gold-tint: #FCF6E8;
+    --gold-line: #E7D3A6;
+    --sl: #3E5F9E;
+    --res: #B8860B;
+    --ok: #2F6B45;
+    --ok-soft: #EDF6F0;
+    --bad: #A93B2E;
+    --bad-soft: #FBF0EE;
+    --body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "SFMono-Regular", "Roboto Mono", "Courier New", monospace;
+
+    font-family: var(--body);
+    color: var(--ink);
+    background: #FFFFFF;
+    max-width: 600px;
+    margin: 0 auto;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    overflow: hidden;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  #app-root * { box-sizing: border-box; }
+  #app-root button { font-family: var(--body); cursor: pointer; }
+  #app-root :focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 2px; }
+
+  /* ---------- navy masthead ---------- */
+  .masthead {
+    padding: 34px 32px 30px;
+    background: linear-gradient(180deg, #1F3459 0%, var(--navy-deep) 100%);
+    color: #fff;
+    border-bottom: 3px solid var(--gold-bright);
+  }
+  .eyebrow {
+    font-size: 11px; font-weight: 600; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--gold-bright); margin-bottom: 12px;
+  }
+  .masthead h1 {
+    font-size: 27px; font-weight: 600; letter-spacing: -.2px;
+    color: #fff; margin: 0 0 8px; line-height: 1.25;
+  }
+  .masthead .standfirst {
+    font-size: 14.5px; color: rgba(255,255,255,.78); margin: 0; max-width: 46ch;
+  }
+
+  .fixture { display: flex; align-items: center; gap: 14px; margin: 28px 0 26px; }
+  .fixture .side {
+    flex: 1; text-align: center; padding: 14px 12px;
+    border: 1px solid rgba(255,255,255,.16); border-radius: 10px;
+    background: rgba(255,255,255,.06);
+  }
+  .fixture .side .lbl {
+    display: block; font-size: 10.5px; letter-spacing: .14em;
+    text-transform: uppercase; color: rgba(255,255,255,.55); margin-bottom: 5px;
+  }
+  .fixture .side .nm { font-size: 15px; font-weight: 600; color: #fff; }
+  .fixture .side.sl { border-top: 3px solid #6E8FCB; }
+  .fixture .side.res { border-top: 3px solid var(--gold-bright); }
+  .fixture .vs {
+    font-size: 12px; font-weight: 600; letter-spacing: .1em;
+    color: var(--gold-bright);
+  }
+
+  .facts { display: flex; flex-wrap: wrap; gap: 0 32px; margin: 0; }
+  .facts div { padding: 3px 0; }
+  .facts dt {
+    font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase;
+    color: rgba(255,255,255,.5); margin-bottom: 2px;
+  }
+  .facts dd { margin: 0; font-size: 14px; font-weight: 500; color: #fff; }
+
+  /* ---------- tabs ---------- */
+  .tabs { display: flex; padding: 0 32px; border-bottom: 1px solid var(--line); background: #fff; }
+  .tabs button {
+    background: none; border: 0; padding: 16px 4px 14px; margin-right: 28px;
+    font-size: 13.5px; font-weight: 500; color: var(--muted);
+    border-bottom: 3px solid transparent; margin-bottom: -1px;
+  }
+  .tabs button:hover { color: var(--navy); }
+  .tabs button[aria-selected="true"] {
+    color: var(--navy); font-weight: 600; border-bottom-color: var(--gold-bright);
+  }
+
+  .panel { padding: 32px; }
+  .panel[hidden] { display: none; }
+  .panel > *:last-child { margin-bottom: 0; }
+
+  /* ---------- form ---------- */
+  .fld { display: block; margin-bottom: 28px; }
+  .fld > .lab {
+    display: block; font-size: 11.5px; font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--navy); margin-bottom: 4px;
+  }
+  .fld > .hint { display: block; font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  input[type="text"], input[type="number"], select {
+    width: 100%; padding: 13px 14px; border-radius: 8px;
+    border: 1px solid #CDD4DF; background: #fff; color: var(--ink);
+    font: 400 15px/1.4 var(--body);
+  }
+  input[type="text"]:hover, select:hover { border-color: var(--navy); }
+  input[type="text"]:focus, select:focus, input[type="number"]:focus { border-color: var(--navy); }
+  input::placeholder { color: var(--faint); }
+
+  /* ---------- scoreline ---------- */
+  .scoreline {
+    background: var(--navy-tint); border: 1px solid #DCE3EE;
+    border-top: 3px solid var(--navy);
+    border-radius: 12px; padding: 24px 20px; margin-bottom: 28px;
+  }
+  .scoreline .cap {
+    font-size: 11.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--navy); text-align: center; margin-bottom: 20px;
+  }
+  .score-grid { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; }
+  .score-col { text-align: center; }
+  .score-col .nm {
+    font-size: 12px; font-weight: 600; color: var(--muted);
+    margin-bottom: 12px; min-height: 34px; line-height: 1.4;
+  }
+  .digit {
+    font-family: var(--mono); font-size: 40px; font-weight: 600; color: var(--navy);
+    background: #fff; border: 1px solid #DCE3EE; border-radius: 10px;
+    padding: 14px 0; letter-spacing: -1px;
+  }
+  .stepper { display: flex; gap: 8px; margin-top: 12px; }
+  .stepper button {
+    flex: 1; background: #fff; border: 1px solid #CDD4DF; color: var(--navy);
+    border-radius: 8px; padding: 10px 0; font-size: 16px; font-weight: 600;
+  }
+  .stepper button:hover { background: var(--navy); border-color: var(--navy); color: #fff; }
+  .sep { font-size: 20px; font-weight: 600; color: var(--gold); padding-bottom: 42px; }
+
+  /* ---------- pledge ---------- */
+  .pledge-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .pledge-row button {
+    flex: 1 1 64px; padding: 12px 6px; border-radius: 8px;
+    border: 1px solid #CDD4DF; background: #fff; color: var(--ink);
+    font-size: 14.5px; font-weight: 500;
+  }
+  .pledge-row button:hover { border-color: var(--navy); }
+  .pledge-row button[aria-pressed="true"] {
+    background: var(--navy); border-color: var(--navy); color: #fff; font-weight: 600;
+  }
+
+  .cta {
+    width: 100%; padding: 15px; border: 0; border-radius: 8px;
+    background: var(--navy); color: #fff; font-size: 15px; font-weight: 600;
+    border-bottom: 3px solid var(--gold-bright);
+  }
+  .cta:hover { background: var(--navy-hover); }
+  .cta:disabled { opacity: .5; cursor: not-allowed; }
+  .ghost {
+    width: 100%; padding: 13px; border-radius: 8px; background: #fff;
+    border: 1px solid #CDD4DF; color: var(--navy); font-size: 14px; font-weight: 500;
+  }
+  .ghost:hover { background: var(--navy-tint); border-color: var(--navy); }
+  .ghost.danger { color: var(--bad); border-color: #E7C3BE; }
+  .ghost.danger:hover { background: var(--bad-soft); border-color: var(--bad); }
+  .btn-stack > * { margin-bottom: 12px; }
+
+  .note { font-size: 13px; color: var(--muted); margin: 16px 0 0; }
+  .msg { padding: 14px 16px; border-radius: 8px; font-size: 13.5px; margin-bottom: 24px; }
+  .msg.ok { background: var(--ok-soft); border: 1px solid #CFE5D8; color: var(--ok); }
+  .msg.bad { background: var(--bad-soft); border: 1px solid #EFD3CF; color: var(--bad); }
+
+  /* ---------- table ---------- */
+  .pot { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
+  .stat {
+    border: 1px solid var(--line); border-top: 3px solid var(--gold-bright);
+    border-radius: 12px; padding: 20px; background: #fff;
+  }
+  .stat .k {
+    font-size: 11px; font-weight: 700; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .stat .v { font-size: 30px; font-weight: 600; color: var(--navy); margin-top: 8px; letter-spacing: -.5px; }
+
+  .list-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding-bottom: 12px; border-bottom: 2px solid var(--navy); margin-bottom: 4px;
+  }
+  .list-head h2 { font-size: 13px; font-weight: 700; margin: 0; color: var(--navy); letter-spacing: .02em; }
+  .list-head span { font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+
+  .row { display: flex; align-items: center; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--line-soft); }
+  .rank {
+    font-size: 12.5px; font-weight: 700; color: var(--navy); width: 26px; height: 26px;
+    flex: none; border-radius: 50%; background: var(--gold-tint); border: 1px solid var(--gold-line);
+    display: flex; align-items: center; justify-content: center; font-variant-numeric: tabular-nums;
+  }
+  .row .who { flex: 1; min-width: 0; }
+  .who b { font-size: 14.5px; font-weight: 600; display: block; }
+  .who small { font-size: 12.5px; color: var(--muted); }
+  .pick { font-family: var(--mono); font-size: 15px; font-weight: 600; color: var(--navy); }
+  .pts {
+    font-size: 12px; font-weight: 700; color: var(--ok); background: var(--ok-soft);
+    padding: 4px 10px; border-radius: 999px; min-width: 52px; text-align: center;
+  }
+  .pts.zero { color: var(--faint); background: var(--line-soft); }
+  .empty { text-align: center; padding: 44px 16px; color: var(--muted); font-size: 14px; }
+
+  .rules {
+    margin-top: 36px; padding: 24px;
+    background: var(--gold-tint); border: 1px solid var(--gold-line); border-radius: 12px;
+  }
+  .rules h3 {
+    font-size: 11.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--gold); margin: 0 0 14px;
+  }
+  .rules dl { margin: 0; }
+  .rules .r {
+    display: flex; justify-content: space-between; gap: 20px;
+    font-size: 13.5px; padding: 7px 0;
+  }
+  .rules .r + .r { border-top: 1px solid rgba(184,134,11,.16); }
+  .rules .r span { color: var(--ink); }
+  .rules .r b { color: var(--navy); font-variant-numeric: tabular-nums; }
+
+  .foot {
+    padding: 24px 32px 28px; background: var(--navy-deep);
+    border-top: 3px solid var(--gold-bright);
+    font-size: 12.5px; color: rgba(255,255,255,.7); text-align: center;
+  }
+  .foot b { color: #fff; font-weight: 600; }
+  .foot .cry { color: var(--gold-bright); }
+
+  @media (max-width: 480px) {
+    .masthead, .panel { padding: 26px 20px; }
+    .tabs { padding: 0 20px; }
+    .tabs button { margin-right: 20px; }
+    .foot { padding: 22px 20px; }
+    .facts { gap: 0 24px; }
+  }
+</style>
+
+<header class="masthead">
+  <div class="eyebrow">Aldanat Care Football Club</div>
+  <h1>Charity Match Predictor</h1>
+  <p class="standfirst">Call the full time score and pledge to Cardiac Risk in the Young. Free to enter, and a pledge of zero is welcome.</p>
+
+  <div class="fixture">
+    <div class="side sl"><span class="lbl">Home</span><span class="nm">Supported Living</span></div>
+    <div class="vs">V</div>
+    <div class="side res"><span class="lbl">Away</span><span class="nm">Residential</span></div>
+  </div>
+
+  <dl class="facts">
+    <div><dt>Matchday</dt><dd>Wed 26 August</dd></div>
+    <div><dt>Kick off</dt><dd>2.00pm</dd></div>
+    <div><dt>Entries close</dt><dd>1.45pm</dd></div>
+    <div><dt>Venue</dt><dd>Harwich &amp; Parkeston</dd></div>
+  </dl>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" id="t-predict" aria-selected="true" aria-controls="p-predict">Predict</button>
+  <button role="tab" id="t-board" aria-selected="false" aria-controls="p-board">Table</button>
+  <button role="tab" id="t-result" aria-selected="false" aria-controls="p-result">Result</button>
+</nav>
+
+<!-- PREDICT -->
+<section class="panel" id="p-predict" role="tabpanel" aria-labelledby="t-predict">
+  <div id="predict-msg"></div>
+
+  <label class="fld">
+    <span class="lab">Your name</span>
+    <input type="text" id="f-name" placeholder="e.g. Sam Okoye" autocomplete="name" maxlength="40">
+  </label>
+
+  <label class="fld">
+    <span class="lab">Who you are here with</span>
+    <select id="f-side">
+      <option value="Supported Living">Supported Living</option>
+      <option value="Residential">Residential</option>
+      <option value="Neutral">Neither, just here for the day</option>
+    </select>
+  </label>
+
+  <label class="fld">
+    <span class="lab">How you will pay your pledge</span>
+    <select id="f-method">
+      <option value="Cash">Cash at the desk</option>
+      <option value="Card">Card at the desk</option>
+      <option value="CRY page">Direct on the CRY online page</option>
+    </select>
+  </label>
+
+  <div class="scoreline">
+    <div class="cap">Your full time score</div>
+    <div class="score-grid">
+      <div class="score-col">
+        <div class="nm">Supported<br>Living</div>
+        <div class="digit" id="d-home">1</div>
+        <div class="stepper">
+          <button type="button" data-adj="home:-1" aria-label="One fewer goal for Supported Living">&minus;</button>
+          <button type="button" data-adj="home:1" aria-label="One more goal for Supported Living">+</button>
+        </div>
+      </div>
+      <div class="sep">V</div>
+      <div class="score-col">
+        <div class="nm">Residential</div>
+        <div class="digit" id="d-away">1</div>
+        <div class="stepper">
+          <button type="button" data-adj="away:-1" aria-label="One fewer goal for Residential">&minus;</button>
+          <button type="button" data-adj="away:1" aria-label="One more goal for Residential">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <label class="fld">
+    <span class="lab">First goalscorer</span>
+    <span class="hint">Optional. Worth three points if you call it right.</span>
+    <input type="text" id="f-scorer" placeholder="Player name" maxlength="40">
+  </label>
+
+  <label class="fld">
+    <span class="lab">Your pledge to CRY</span>
+    <span class="hint">Voluntary, and payable whether your prediction is right or wrong.</span>
+    <div class="pledge-row" id="pledge-row">
+      <button type="button" data-pledge="2">&pound;2</button>
+      <button type="button" data-pledge="5" aria-pressed="true">&pound;5</button>
+      <button type="button" data-pledge="10">&pound;10</button>
+      <button type="button" data-pledge="20">&pound;20</button>
+    </div>
+    <input type="number" id="f-pledge" min="0" max="500" step="1" value="5" aria-label="Pledge amount in pounds">
+  </label>
+
+  <button class="cta" id="submit-btn">Enter my prediction</button>
+  <p class="note">One entry per person. Entering again updates your existing prediction. No payment is taken through this app.</p>
+</section>
+
+<!-- TABLE -->
+<section class="panel" id="p-board" role="tabpanel" aria-labelledby="t-board" hidden>
+  <div class="pot">
+    <div class="stat"><div class="k">Pledged</div><div class="v" id="s-pot">&pound;0</div></div>
+    <div class="stat"><div class="k">Entries</div><div class="v" id="s-count">0</div></div>
+  </div>
+
+  <div id="result-banner"></div>
+
+  <div class="list-head">
+    <h2 id="list-title">Predictions received</h2>
+    <span id="list-order">Most recent first</span>
+  </div>
+  <div id="board-list"><div class="empty">No predictions yet. Be the first on the sheet.</div></div>
+
+  <div class="rules">
+    <h3>How points are scored</h3>
+    <dl>
+      <div class="r"><span>Exact full time score</span><b>5</b></div>
+      <div class="r"><span>Right result, wrong score</span><b>2</b></div>
+      <div class="r"><span>Goal difference bonus</span><b>1</b></div>
+      <div class="r"><span>First goalscorer</span><b>3</b></div>
+    </dl>
+  </div>
+</section>
+
+<!-- RESULT -->
+<section class="panel" id="p-result" role="tabpanel" aria-labelledby="t-result" hidden>
+  <div id="result-msg"></div>
+  <p class="note" style="margin:0 0 28px">For the organiser. Enter the final score once the referee has confirmed it, and the table settles itself.</p>
+
+  <div class="scoreline">
+    <div class="cap">Full time score</div>
+    <div class="score-grid">
+      <div class="score-col">
+        <div class="nm">Supported<br>Living</div>
+        <div class="digit" id="d-rhome">0</div>
+        <div class="stepper">
+          <button type="button" data-adj="rhome:-1" aria-label="One fewer goal for Supported Living">&minus;</button>
+          <button type="button" data-adj="rhome:1" aria-label="One more goal for Supported Living">+</button>
+        </div>
+      </div>
+      <div class="sep">V</div>
+      <div class="score-col">
+        <div class="nm">Residential</div>
+        <div class="digit" id="d-raway">0</div>
+        <div class="stepper">
+          <button type="button" data-adj="raway:-1" aria-label="One fewer goal for Residential">&minus;</button>
+          <button type="button" data-adj="raway:1" aria-label="One more goal for Residential">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <label class="fld">
+    <span class="lab">First goalscorer</span>
+    <span class="hint">Spell it as entrants would have. Leave blank if there were no goals or the first was an own goal.</span>
+    <input type="text" id="f-rscorer" placeholder="Player name" maxlength="40">
+  </label>
+
+  <div class="btn-stack">
+    <button class="cta" id="settle-btn">Publish result and settle table</button>
+    <button class="ghost" id="unsettle-btn">Reopen predictions</button>
+    <button class="ghost danger" id="clear-btn">Clear all entries</button>
+  </div>
+</section>
+
+<div class="foot"><b>Aldanat Care FC</b> &nbsp;&middot;&nbsp; Together We Care<br>Every penny pledged goes to <span class="cry">Cardiac Risk in the Young</span></div>
+</div>
+
+<script>
+(function () {
+  var KEY_P = 'aldanat:predictions';
+  var KEY_R = 'aldanat:result';
+
+  var state = {
+    preds: [], result: null,
+    pick: { home: 1, away: 1 }, rpick: { home: 0, away: 0 },
+    pledge: 5, fallback: false
+  };
+
+  var $ = function (id) { return document.getElementById(id); };
+  function haveStore() { return typeof window !== 'undefined' && window.storage; }
+
+  async function readAll() {
+    if (!haveStore()) { state.fallback = true; return; }
+    try {
+      var p = await window.storage.get(KEY_P, true);
+      state.preds = p && p.value ? JSON.parse(p.value) : [];
+    } catch (e) { state.preds = []; }
+    try {
+      var r = await window.storage.get(KEY_R, true);
+      state.result = r && r.value ? JSON.parse(r.value) : null;
+    } catch (e) { state.result = null; }
+  }
+  async function writePreds() {
+    if (!haveStore()) { state.fallback = true; return true; }
+    try { await window.storage.set(KEY_P, JSON.stringify(state.preds), true); return true; }
+    catch (e) { return false; }
+  }
+  async function writeResult() {
+    if (!haveStore()) { state.fallback = true; return true; }
+    try { await window.storage.set(KEY_R, state.result ? JSON.stringify(state.result) : '', true); return true; }
+    catch (e) { return false; }
+  }
+
+  function scoreOf(p) {
+    var r = state.result;
+    if (!r) return null;
+    var pts = 0;
+    if (p.home === r.home && p.away === r.away) {
+      pts += 5;
+    } else {
+      var po = Math.sign(p.home - p.away), ro = Math.sign(r.home - r.away);
+      if (po === ro) {
+        pts += 2;
+        if ((p.home - p.away) === (r.home - r.away)) pts += 1;
+      }
+    }
+    var ps = (p.scorer || '').trim().toLowerCase();
+    var rs = (r.scorer || '').trim().toLowerCase();
+    if (ps && rs && ps === rs) pts += 3;
+    return pts;
+  }
+
+  function money(n) { return '£' + Number(n).toFixed(Number(n) % 1 ? 2 : 0); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function flash(el, cls, text) {
+    el.innerHTML = '<div class="msg ' + cls + '">' + text + '</div>';
+    if (cls === 'ok') setTimeout(function () { el.innerHTML = ''; }, 5000);
+  }
+
+  function renderDigits() {
+    $('d-home').textContent = state.pick.home;
+    $('d-away').textContent = state.pick.away;
+    $('d-rhome').textContent = state.rpick.home;
+    $('d-raway').textContent = state.rpick.away;
+  }
+
+  function renderBoard() {
+    var pot = state.preds.reduce(function (s, p) { return s + (Number(p.pledge) || 0); }, 0);
+    $('s-pot').textContent = money(pot);
+    $('s-count').textContent = state.preds.length;
+
+    var banner = $('result-banner');
+    if (state.result) {
+      banner.innerHTML = '<div class="msg ok"><b>Full time: Supported Living ' + state.result.home +
+        ' v ' + state.result.away + ' Residential.</b>' +
+        (state.result.scorer ? ' First goal: ' + esc(state.result.scorer) + '.' : '') + '</div>';
+      $('list-title').textContent = 'Final standings';
+      $('list-order').textContent = 'Ranked by points';
+    } else {
+      banner.innerHTML = '';
+      $('list-title').textContent = 'Predictions received';
+      $('list-order').textContent = 'Most recent first';
+    }
+
+    var list = state.preds.slice();
+    if (state.result) {
+      list.forEach(function (p) { p._pts = scoreOf(p); });
+      list.sort(function (a, b) { return b._pts - a._pts || a.name.localeCompare(b.name); });
+    } else {
+      list.sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
+    }
+
+    var el = $('board-list');
+    if (!list.length) {
+      el.innerHTML = '<div class="empty">No predictions yet. Be the first on the sheet.</div>';
+      return;
+    }
+    el.innerHTML = list.map(function (p, i) {
+      var pts = state.result ? p._pts : null;
+      var meta = esc(p.side) + ' · ' + money(p.pledge) +
+        (p.method ? ' ' + esc(p.method.toLowerCase()) : '') +
+        (p.scorer ? ' · ' + esc(p.scorer) : '');
+      return '<div class="row">' +
+        (state.result ? '<div class="rank">' + (i + 1) + '</div>' : '') +
+        '<div class="who"><b>' + esc(p.name) + '</b><small>' + meta + '</small></div>' +
+        '<div class="pick">' + p.home + ' &ndash; ' + p.away + '</div>' +
+        (state.result ? '<div class="pts' + (pts ? '' : ' zero') + '">' + pts + ' pt' + (pts === 1 ? '' : 's') + '</div>' : '') +
+        '</div>';
+    }).join('');
+  }
+
+  document.addEventListener('click', function (ev) {
+    var t = ev.target.closest('[data-adj]');
+    if (t) {
+      var parts = t.getAttribute('data-adj').split(':');
+      var which = parts[0], delta = Number(parts[1]);
+      var bucket = which.charAt(0) === 'r' ? state.rpick : state.pick;
+      var side = which.replace('r', '');
+      bucket[side] = Math.max(0, Math.min(20, bucket[side] + delta));
+      renderDigits();
+      return;
+    }
+    var pl = ev.target.closest('[data-pledge]');
+    if (pl) {
+      state.pledge = Number(pl.getAttribute('data-pledge'));
+      $('f-pledge').value = state.pledge;
+      Array.prototype.forEach.call($('pledge-row').children, function (b) {
+        b.setAttribute('aria-pressed', b === pl ? 'true' : 'false');
+      });
+    }
+  });
+
+  $('f-pledge').addEventListener('input', function () {
+    state.pledge = Math.max(0, Number(this.value) || 0);
+    Array.prototype.forEach.call($('pledge-row').children, function (b) {
+      b.setAttribute('aria-pressed', Number(b.getAttribute('data-pledge')) === state.pledge ? 'true' : 'false');
+    });
+  });
+
+  ['predict', 'board', 'result'].forEach(function (k) {
+    $('t-' + k).addEventListener('click', function () {
+      ['predict', 'board', 'result'].forEach(function (o) {
+        $('t-' + o).setAttribute('aria-selected', String(o === k));
+        $('p-' + o).hidden = (o !== k);
+      });
+      if (k === 'board') renderBoard();
+    });
+  });
+
+  $('submit-btn').addEventListener('click', async function () {
+    var btn = this;
+    var name = $('f-name').value.trim();
+    var msg = $('predict-msg');
+    if (name.length < 2) {
+      flash(msg, 'bad', 'Add your name so we know whose prediction this is.');
+      $('f-name').focus();
+      return;
+    }
+    if (state.result) {
+      flash(msg, 'bad', 'The result is in, so the sheet is closed. Check the table.');
+      return;
+    }
+    btn.disabled = true; btn.textContent = 'Saving';
+    await readAll();
+    var entry = {
+      name: name,
+      side: $('f-side').value,
+      method: $('f-method').value,
+      home: state.pick.home,
+      away: state.pick.away,
+      scorer: $('f-scorer').value.trim(),
+      pledge: state.pledge,
+      ts: Date.now()
+    };
+    var idx = state.preds.findIndex(function (p) { return p.name.toLowerCase() === name.toLowerCase(); });
+    var updated = idx > -1;
+    if (updated) state.preds[idx] = entry; else state.preds.push(entry);
+    var ok = await writePreds();
+    btn.disabled = false; btn.textContent = 'Enter my prediction';
+    if (ok) {
+      flash(msg, 'ok', (updated ? 'Prediction updated' : 'You are on the sheet') + '. ' + esc(name) +
+        ' calls it ' + entry.home + ' to ' + entry.away + ', with ' + money(entry.pledge) + ' pledged.');
+      renderBoard();
+    } else {
+      flash(msg, 'bad', 'That did not save. Check your connection and try again.');
+    }
+  });
+
+  $('settle-btn').addEventListener('click', async function () {
+    var msg = $('result-msg');
+    await readAll();
+    state.result = { home: state.rpick.home, away: state.rpick.away, scorer: $('f-rscorer').value.trim() };
+    var ok = await writeResult();
+    if (ok) { flash(msg, 'ok', 'Result published. The table is settled.'); renderBoard(); }
+    else { flash(msg, 'bad', 'The result did not save. Try again.'); }
+  });
+
+  $('unsettle-btn').addEventListener('click', async function () {
+    if (!confirm('Reopen predictions and remove the published result?')) return;
+    state.result = null;
+    await writeResult();
+    flash($('result-msg'), 'ok', 'Predictions are open again.');
+    renderBoard();
+  });
+
+  $('clear-btn').addEventListener('click', async function () {
+    if (!confirm('Delete every entry and the result? This cannot be undone.')) return;
+    state.preds = []; state.result = null;
+    await writePreds(); await writeResult();
+    flash($('result-msg'), 'ok', 'All entries cleared.');
+    renderBoard();
+  });
+
+  (async function () {
+    await readAll();
+    renderDigits();
+    renderBoard();
+    if (state.fallback) {
+      flash($('predict-msg'), 'bad', 'Shared storage is unavailable here, so entries will only last this session.');
+    }
+  })();
+})();
+</script>
+
+</body>
+</html>

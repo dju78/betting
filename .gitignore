@@ -1,0 +1,16 @@
+# OS and editor noise
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Deployment and tooling
+.vercel/
+node_modules/
+*.log
+
+# Never commit event data
+*-entries.json
+*-entries.csv
+completed-*.xlsx
