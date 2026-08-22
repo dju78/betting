@@ -33,6 +33,17 @@ python3 -m http.server 8000
 
 Deploy by pointing any static host at the repository root. The live copy runs on Vercel with no build command and no output directory.
 
+## Two pages
+
+| Page | Who it is for |
+| --- | --- |
+| `/` (`index.html`) | Entrants. Enter a name, call the score, choose a pledge. |
+| `/admin` (`admin.html`) | The organiser at the desk. Behind a desk code set at the top of the file. |
+
+The desk console holds the sheet: add, edit and delete entries, record who has actually paid and by which route, watch pledged against received, close entries, publish the result, print the sheet, and export a CSV that pastes straight into the Pledge Log tab of the reconciliation workbook.
+
+Change `DESK_CODE` in `admin.html` before matchday. It deters idle tampering by anyone who wanders past the tablet. It is not security, because the code sits in the page source, so do not treat it as protecting anything that matters.
+
 ## Storage, and the one thing to understand before matchday
 
 The app writes to `window.storage` if the host provides it, and otherwise falls back to `localStorage` on the device. **A static deployment has no shared backend, so each device keeps its own separate copy of the sheet.**
@@ -50,7 +61,8 @@ Other known limitations, all managed in the organiser pack:
 ## Repository contents
 
 ```
-index.html                                     the whole application
+index.html                                     the entrant page
+admin.html                                     the organiser desk console
 docs/Match-Predictor-Rules-and-Privacy-Notice.docx   participant facing, circulate with the link
 docs/Match-Predictor-Organiser-Pack.docx            roles, run sheet, money controls, compliance, forms
 docs/Match-Predictor-Pledge-Reconciliation.xlsx     pledge log, cash count, reconciliation, remittance

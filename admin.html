@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Desk Console | Aldanat Care FC Match Predictor</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+  html, body { margin: 0; padding: 0; background: #F4F6FA; }
+  body { padding: 0; -webkit-text-size-adjust: 100%; }
+  @media (min-width: 700px) { body { padding: 28px 16px 44px; } }
+</style>
+<script>
+/* Same storage interface as the entrant page, so both read the same sheet on this device. */
+(function () {
+  var mem = {};
+  function ls() { try { return window.localStorage; } catch (e) { return null; } }
+  if (!window.storage) {
+    window.storage = {
+      get: async function (k) { var s = ls(); var v = s ? s.getItem(k) : mem[k]; return { key: k, value: v == null ? '' : v, shared: true }; },
+      set: async function (k, v) { var s = ls(); if (s) { s.setItem(k, v); } else { mem[k] = v; } return { key: k, value: v, shared: true }; },
+      delete: async function (k) { var s = ls(); if (s) { s.removeItem(k); } else { delete mem[k]; } return { key: k, deleted: true, shared: true }; },
+      list: async function () { return { keys: [], shared: true }; }
+    };
+  }
+})();
+</script>
+</head>
+<body>
+<div id="app-root">
+<style>
+  #app-root {
+    --ink: #0F1B2E; --muted: #5A6478; --faint: #97A0B0;
+    --line: #E2E6EC; --line-soft: #EFF2F6;
+    --navy: #1B2E52; --navy-deep: #142442; --navy-hover: #16253F; --navy-tint: #F4F6FA;
+    --gold: #B8860B; --gold-bright: #E8A93C; --gold-tint: #FCF6E8; --gold-line: #E7D3A6;
+    --ok: #2F6B45; --ok-soft: #EDF6F0; --bad: #A93B2E; --bad-soft: #FBF0EE;
+    --body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "SFMono-Regular", "Roboto Mono", "Courier New", monospace;
+    font-family: var(--body); color: var(--ink); background: #fff;
+    max-width: 760px; margin: 0 auto; border: 1px solid var(--line);
+    border-radius: 16px; overflow: hidden; line-height: 1.55; -webkit-font-smoothing: antialiased;
+  }
+  #app-root * { box-sizing: border-box; }
+  #app-root button { font-family: var(--body); cursor: pointer; }
+  #app-root :focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 2px; }
+
+  .masthead { padding: 28px 32px 24px; background: linear-gradient(180deg, #1F3459 0%, var(--navy-deep) 100%); color: #fff; border-bottom: 3px solid var(--gold-bright); }
+  .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--gold-bright); margin-bottom: 10px; }
+  .masthead h1 { font-size: 24px; font-weight: 600; color: #fff; margin: 0 0 6px; }
+  .masthead p { font-size: 14px; color: rgba(255,255,255,.75); margin: 0; }
+  .statusbar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .pill { font-size: 11.5px; font-weight: 600; padding: 5px 11px; border-radius: 999px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: #fff; }
+  .pill.open { background: rgba(46,107,69,.35); border-color: rgba(120,200,150,.45); }
+  .pill.closed { background: rgba(232,169,60,.22); border-color: rgba(232,169,60,.5); color: var(--gold-bright); }
+  .pill.settled { background: rgba(232,169,60,.9); border-color: var(--gold-bright); color: #241705; }
+
+  .tabs { display: flex; padding: 0 32px; border-bottom: 1px solid var(--line); background: #fff; overflow-x: auto; }
+  .tabs button { background: none; border: 0; padding: 15px 4px 13px; margin-right: 26px; font-size: 13.5px; font-weight: 500; color: var(--muted); border-bottom: 3px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+  .tabs button[aria-selected="true"] { color: var(--navy); font-weight: 600; border-bottom-color: var(--gold-bright); }
+
+  .panel { padding: 28px 32px 32px; }
+  .panel[hidden] { display: none; }
+
+  h2.sec { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--navy); margin: 0 0 14px; padding-bottom: 10px; border-bottom: 2px solid var(--navy); }
+  h2.sec:not(:first-child) { margin-top: 36px; }
+
+  label.lab { display: block; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
+  input, select, textarea { width: 100%; padding: 11px 12px; border-radius: 8px; border: 1px solid #CDD4DF; background: #fff; color: var(--ink); font: 400 14.5px/1.4 var(--body); }
+  input:focus, select:focus, textarea:focus { border-color: var(--navy); }
+  textarea { font-family: var(--mono); font-size: 12px; min-height: 120px; resize: vertical; }
+  .grid { display: grid; gap: 14px; margin-bottom: 14px; }
+  .g2 { grid-template-columns: 1fr 1fr; }
+  .g3 { grid-template-columns: 1fr 1fr 1fr; }
+  .g4 { grid-template-columns: repeat(4, 1fr); }
+
+  .btn { padding: 12px 18px; border-radius: 8px; border: 0; background: var(--navy); color: #fff; font-size: 14px; font-weight: 600; border-bottom: 3px solid var(--gold-bright); }
+  .btn:hover { background: var(--navy-hover); }
+  .btn.wide { width: 100%; }
+  .btn2 { padding: 11px 16px; border-radius: 8px; background: #fff; border: 1px solid #CDD4DF; color: var(--navy); font-size: 13.5px; font-weight: 500; }
+  .btn2:hover { background: var(--navy-tint); border-color: var(--navy); }
+  .btn2.danger { color: var(--bad); border-color: #E7C3BE; }
+  .btn2.danger:hover { background: var(--bad-soft); border-color: var(--bad); }
+  .btn2.tiny { padding: 6px 11px; font-size: 12.5px; }
+  .btnrow { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  .msg { padding: 13px 15px; border-radius: 8px; font-size: 13.5px; margin-bottom: 20px; }
+  .msg.ok { background: var(--ok-soft); border: 1px solid #CFE5D8; color: var(--ok); }
+  .msg.bad { background: var(--bad-soft); border: 1px solid #EFD3CF; color: var(--bad); }
+  .msg.warn { background: var(--gold-tint); border: 1px solid var(--gold-line); color: var(--gold); }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 8px; }
+  .stat { border: 1px solid var(--line); border-top: 3px solid var(--gold-bright); border-radius: 12px; padding: 16px; }
+  .stat .k { font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .stat .v { font-size: 24px; font-weight: 600; color: var(--navy); margin-top: 6px; letter-spacing: -.4px; }
+  .stat.alert { border-top-color: var(--bad); }
+  .stat.alert .v { color: var(--bad); }
+
+  table.tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  table.tbl th { text-align: left; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 700; padding: 10px 8px; border-bottom: 1px solid var(--line); }
+  table.tbl td { padding: 12px 8px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  table.tbl tr:hover td { background: var(--navy-tint); }
+  table.tbl td.num, table.tbl th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .nm { font-weight: 600; }
+  .sub { font-size: 12px; color: var(--muted); }
+  .score { font-family: var(--mono); font-weight: 600; color: var(--navy); }
+
+  .tag { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+  .tag.paid { background: var(--ok-soft); color: var(--ok); }
+  .tag.part { background: var(--gold-tint); color: var(--gold); }
+  .tag.due { background: var(--bad-soft); color: var(--bad); }
+  .tag.cry { background: var(--navy-tint); color: var(--navy); }
+
+  .empty { text-align: center; padding: 40px 16px; color: var(--muted); font-size: 14px; }
+  .note { font-size: 12.5px; color: var(--muted); margin: 12px 0 0; }
+  .rowactions { display: flex; gap: 6px; justify-content: flex-end; }
+
+  .gate { padding: 60px 32px; text-align: center; }
+  .gate h2 { font-size: 20px; color: var(--navy); margin: 0 0 8px; }
+  .gate p { font-size: 14px; color: var(--muted); margin: 0 auto 24px; max-width: 42ch; }
+  .gate .box { max-width: 260px; margin: 0 auto; }
+  .gate input { text-align: center; font-family: var(--mono); font-size: 22px; letter-spacing: 6px; margin-bottom: 12px; }
+
+  .foot { padding: 20px 32px 24px; background: var(--navy-deep); border-top: 3px solid var(--gold-bright); font-size: 12px; color: rgba(255,255,255,.65); text-align: center; }
+
+  @media (max-width: 620px) {
+    .masthead, .panel { padding: 22px 18px; }
+    .tabs { padding: 0 18px; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    .g3, .g4 { grid-template-columns: 1fr 1fr; }
+    table.tbl th.hide, table.tbl td.hide { display: none; }
+  }
+  @media print {
+    body { padding: 0; background: #fff; }
+    #app-root { border: 0; max-width: none; }
+    .tabs, .btn, .btn2, .btnrow, .foot, .noprint { display: none !important; }
+    .masthead { background: #fff !important; color: #000; border-bottom: 2px solid #000; }
+    .masthead h1, .masthead p, .eyebrow, .pill { color: #000 !important; }
+    .pill { border: 1px solid #666; background: none !important; }
+  }
+</style>
+
+<!-- GATE -->
+<div class="gate" id="gate">
+  <h2>Desk Console</h2>
+  <p>Organiser access only. Enter the desk code to open the sheet.</p>
+  <div class="box">
+    <input type="password" id="pin" inputmode="numeric" maxlength="8" placeholder="Code" autocomplete="off">
+    <button class="btn wide" id="unlock">Unlock</button>
+    <div id="gate-msg" style="margin-top:14px"></div>
+  </div>
+</div>
+
+<!-- CONSOLE -->
+<div id="console" hidden>
+<header class="masthead">
+  <div class="eyebrow">Aldanat Care Football Club</div>
+  <h1>Match Predictor: Desk Console</h1>
+  <p>Supported Living v Residential &middot; Wed 26 August &middot; in aid of Cardiac Risk in the Young</p>
+  <div class="statusbar" id="statusbar"></div>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" id="t-entries" aria-selected="true">Entries</button>
+  <button role="tab" id="t-money" aria-selected="false">Money</button>
+  <button role="tab" id="t-result" aria-selected="false">Result</button>
+  <button role="tab" id="t-data" aria-selected="false">Data</button>
+</nav>
+
+<!-- ENTRIES -->
+<section class="panel" id="p-entries">
+  <div id="entries-msg"></div>
+
+  <h2 class="sec" id="form-title">Add an entry</h2>
+  <div class="grid g2">
+    <div><label class="lab" for="e-name">Name</label><input type="text" id="e-name" maxlength="40" placeholder="Full name"></div>
+    <div><label class="lab" for="e-side">Service</label>
+      <select id="e-side">
+        <option>Supported Living</option><option>Residential</option><option>Neutral</option>
+      </select>
+    </div>
+  </div>
+  <div class="grid g4">
+    <div><label class="lab" for="e-home">SL goals</label><input type="number" id="e-home" min="0" max="20" value="1"></div>
+    <div><label class="lab" for="e-away">Res goals</label><input type="number" id="e-away" min="0" max="20" value="1"></div>
+    <div><label class="lab" for="e-pledge">Pledge &pound;</label><input type="number" id="e-pledge" min="0" step="1" value="5"></div>
+    <div><label class="lab" for="e-method">Method</label>
+      <select id="e-method"><option>Cash</option><option>Card</option><option>CRY page</option></select>
+    </div>
+  </div>
+  <div class="grid g2">
+    <div><label class="lab" for="e-scorer">First goalscorer</label><input type="text" id="e-scorer" maxlength="40" placeholder="Optional"></div>
+    <div><label class="lab" for="e-notes">Notes</label><input type="text" id="e-notes" maxlength="60" placeholder="Optional"></div>
+  </div>
+  <div class="btnrow">
+    <button class="btn" id="save-entry">Save entry</button>
+    <button class="btn2" id="cancel-edit" hidden>Cancel edit</button>
+  </div>
+  <p class="note">Entering a name that already exists updates that entry rather than adding a second one.</p>
+
+  <h2 class="sec">The sheet</h2>
+  <div class="grid g2 noprint" style="margin-bottom:18px">
+    <div><label class="lab" for="q">Search</label><input type="text" id="q" placeholder="Name or service"></div>
+    <div><label class="lab" for="filter">Show</label>
+      <select id="filter">
+        <option value="all">Everyone</option>
+        <option value="due">Money outstanding</option>
+        <option value="paid">Settled up</option>
+        <option value="cry">Giving on the CRY page</option>
+      </select>
+    </div>
+  </div>
+  <div id="entries-list"></div>
+</section>
+
+<!-- MONEY -->
+<section class="panel" id="p-money" hidden>
+  <div id="money-msg"></div>
+  <h2 class="sec">Position</h2>
+  <div class="stats" id="money-stats"></div>
+  <p class="note">Held by us means cash and card taken at the desk. Money given on the CRY page goes straight to the charity and must never be banked or remitted by us.</p>
+
+  <h2 class="sec">By collection route</h2>
+  <div id="method-table"></div>
+
+  <h2 class="sec">Still to collect</h2>
+  <div id="due-list"></div>
+
+  <h2 class="sec">Record a collection</h2>
+  <div class="grid g2">
+    <div><label class="lab" for="c-name">Whose pledge</label><select id="c-name"></select></div>
+    <div><label class="lab" for="c-amount">Amount received &pound;</label><input type="number" id="c-amount" min="0" step="0.01" placeholder="0.00"></div>
+  </div>
+  <div class="grid g3">
+    <div><label class="lab" for="c-method">Route</label>
+      <select id="c-method"><option>Cash</option><option>Card</option><option>CRY page</option></select>
+    </div>
+    <div><label class="lab" for="c-by">Taken by</label><input type="text" id="c-by" maxlength="20" placeholder="Initials"></div>
+    <div><label class="lab" for="c-gift">Gift Aid declaration</label>
+      <select id="c-gift"><option value="N">No</option><option value="Y">Yes, signed</option></select>
+    </div>
+  </div>
+  <button class="btn" id="save-collection">Record collection</button>
+  <p class="note">Gift Aid is only Y where a declaration giving name and home address has been signed, and never on money that buys entry or a prize.</p>
+</section>
+
+<!-- RESULT -->
+<section class="panel" id="p-result" hidden>
+  <div id="result-msg"></div>
+  <h2 class="sec">Close entries</h2>
+  <p class="note" style="margin:0 0 14px">Close at 1.45pm, fifteen minutes before kick off, then print the sheet as the record of what was submitted before the whistle.</p>
+  <div class="btnrow">
+    <button class="btn2" id="toggle-lock">Close entries now</button>
+    <button class="btn2" id="print-sheet">Print the sheet</button>
+  </div>
+
+  <h2 class="sec">Full time score</h2>
+  <div class="grid g3">
+    <div><label class="lab" for="r-home">Supported Living</label><input type="number" id="r-home" min="0" max="20" value="0"></div>
+    <div><label class="lab" for="r-away">Residential</label><input type="number" id="r-away" min="0" max="20" value="0"></div>
+    <div><label class="lab" for="r-scorer">First goalscorer</label><input type="text" id="r-scorer" maxlength="40" placeholder="Blank if none or own goal"></div>
+  </div>
+  <div class="btnrow">
+    <button class="btn" id="settle">Publish result and settle</button>
+    <button class="btn2" id="unsettle">Reopen predictions</button>
+  </div>
+  <p class="note">Confirm the score with the referee or match secretary before publishing. Spell the goalscorer as entrants would have.</p>
+
+  <h2 class="sec">Standings</h2>
+  <div id="standings"></div>
+</section>
+
+<!-- DATA -->
+<section class="panel" id="p-data" hidden>
+  <div id="data-msg"></div>
+
+  <h2 class="sec">Export for the reconciliation workbook</h2>
+  <p class="note" style="margin:0 0 14px">Downloads a CSV in the same column order as the Pledge Log tab. Open it, copy the rows, and paste into cell B5 of the workbook.</p>
+  <div class="btnrow">
+    <button class="btn" id="export-csv">Download CSV</button>
+    <button class="btn2" id="export-json">Download backup</button>
+  </div>
+
+  <h2 class="sec">Restore a backup</h2>
+  <p class="note" style="margin:0 0 12px">Paste a backup file below to replace what is on this device. Use this to move the sheet to another device, or to recover after a browser clear.</p>
+  <textarea id="import-box" placeholder="Paste backup here"></textarea>
+  <div class="btnrow" style="margin-top:12px">
+    <button class="btn2" id="import-json">Restore</button>
+  </div>
+
+  <h2 class="sec">Retention</h2>
+  <p class="note" style="margin:0 0 14px">Entries must be deleted within 30 days of the final reconciliation, and the deletion signed off at Appendix B of the organiser pack. Take the backup and complete the workbook first, because this cannot be undone.</p>
+  <button class="btn2 danger" id="wipe">Delete every entry and the result</button>
+</section>
+
+<div class="foot">Aldanat Care FC &middot; Desk Console &middot; Free to enter, no stake, no cash prize</div>
+</div>
+</div>
+
+<script>
+(function () {
+  /* ---- Change this before matchday. It deters idle tampering; it is not security. ---- */
+  var DESK_CODE = '2608';
+
+  var KEY_P = 'aldanat:predictions';
+  var KEY_R = 'aldanat:result';
+  var KEY_C = 'aldanat:collections';
+  var KEY_L = 'aldanat:locked';
+
+  var S = { preds: [], result: null, cols: {}, locked: false, editing: null, tab: 'entries' };
+  var $ = function (id) { return document.getElementById(id); };
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function money(n) { return '\u00a3' + (Number(n) || 0).toFixed(2); }
+  function key(n) { return String(n || '').trim().toLowerCase(); }
+  function flash(el, cls, text) {
+    el.innerHTML = '<div class="msg ' + cls + '">' + text + '</div>';
+    if (cls === 'ok') setTimeout(function () { el.innerHTML = ''; }, 5000);
+  }
+
+  async function get(k, fallback) {
+    try { var r = await window.storage.get(k, true); return r && r.value ? JSON.parse(r.value) : fallback; }
+    catch (e) { return fallback; }
+  }
+  async function put(k, v) {
+    try { await window.storage.set(k, JSON.stringify(v), true); return true; } catch (e) { return false; }
+  }
+  async function loadAll() {
+    S.preds = await get(KEY_P, []) || [];
+    S.result = await get(KEY_R, null);
+    S.cols = await get(KEY_C, {}) || {};
+    S.locked = await get(KEY_L, false) === true;
+  }
+
+  function col(name) { return S.cols[key(name)] || { received: 0, method: '', by: '', gift: 'N' }; }
+  function received(p) { return Number(col(p.name).received) || 0; }
+  function outstanding(p) { return Math.max(0, (Number(p.pledge) || 0) - received(p)); }
+
+  function totals() {
+    var t = { pledged: 0, received: 0, outstanding: 0, cash: 0, card: 0, cry: 0, gift: 0,
+              pCash: 0, pCard: 0, pCry: 0, entries: S.preds.length };
+    S.preds.forEach(function (p) {
+      var pl = Number(p.pledge) || 0, rc = received(p), c = col(p.name);
+      t.pledged += pl; t.received += rc; t.outstanding += outstanding(p);
+      var route = (c.method || p.method || 'Cash');
+      if (route === 'Cash') { t.cash += rc; t.pCash += pl; }
+      else if (route === 'Card') { t.card += rc; t.pCard += pl; }
+      else { t.cry += rc; t.pCry += pl; }
+      if (c.gift === 'Y') t.gift += rc;
+    });
+    t.held = t.cash + t.card;
+    return t;
+  }
+
+  function scoreOf(p) {
+    var r = S.result;
+    if (!r) return null;
+    var pts = 0;
+    if (p.home === r.home && p.away === r.away) { pts += 5; }
+    else {
+      var po = Math.sign(p.home - p.away), ro = Math.sign(r.home - r.away);
+      if (po === ro) { pts += 2; if ((p.home - p.away) === (r.home - r.away)) pts += 1; }
+    }
+    var ps = (p.scorer || '').trim().toLowerCase(), rs = (r.scorer || '').trim().toLowerCase();
+    if (ps && rs && ps === rs) pts += 3;
+    return pts;
+  }
+
+  /* ---------------- rendering ---------------- */
+  function renderStatus() {
+    var t = totals();
+    var bits = [];
+    bits.push('<span class="pill ' + (S.locked ? 'closed' : 'open') + '">' + (S.locked ? 'Entries closed' : 'Entries open') + '</span>');
+    if (S.result) bits.push('<span class="pill settled">Full time ' + S.result.home + ' v ' + S.result.away + '</span>');
+    bits.push('<span class="pill">' + t.entries + ' entries</span>');
+    bits.push('<span class="pill">' + money(t.pledged) + ' pledged</span>');
+    bits.push('<span class="pill">' + money(t.received) + ' in</span>');
+    if (t.outstanding > 0) bits.push('<span class="pill">' + money(t.outstanding) + ' to collect</span>');
+    $('statusbar').innerHTML = bits.join('');
+    $('toggle-lock').textContent = S.locked ? 'Reopen entries' : 'Close entries now';
+  }
+
+  function renderEntries() {
+    var q = key($('q').value), f = $('filter').value;
+    var list = S.preds.slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
+    list = list.filter(function (p) {
+      if (q && key(p.name).indexOf(q) < 0 && key(p.side).indexOf(q) < 0) return false;
+      var c = col(p.name), route = c.method || p.method;
+      if (f === 'due') return outstanding(p) > 0.005;
+      if (f === 'paid') return outstanding(p) <= 0.005 && (Number(p.pledge) || 0) > 0;
+      if (f === 'cry') return route === 'CRY page';
+      return true;
+    });
+
+    if (!list.length) {
+      $('entries-list').innerHTML = '<div class="empty">Nothing matches. Clear the search or change the filter.</div>';
+      return;
+    }
+    var rows = list.map(function (p) {
+      var c = col(p.name), pl = Number(p.pledge) || 0, rc = received(p), out = outstanding(p);
+      var route = c.method || p.method || 'Cash';
+      var tag = route === 'CRY page' && rc <= 0 ? '<span class="tag cry">CRY page</span>'
+        : out <= 0.005 && pl > 0 ? '<span class="tag paid">Settled</span>'
+        : rc > 0 ? '<span class="tag part">Part paid</span>'
+        : pl > 0 ? '<span class="tag due">' + money(out) + ' due</span>'
+        : '<span class="tag paid">No pledge</span>';
+      return '<tr>' +
+        '<td><div class="nm">' + esc(p.name) + '</div><div class="sub">' + esc(p.side) +
+          (p.scorer ? ' &middot; ' + esc(p.scorer) : '') + (c.by ? ' &middot; taken by ' + esc(c.by) : '') +
+          (c.gift === 'Y' ? ' &middot; Gift Aid' : '') + '</div></td>' +
+        '<td class="score">' + p.home + '&ndash;' + p.away + '</td>' +
+        '<td class="num hide">' + money(pl) + '</td>' +
+        '<td class="num hide">' + money(rc) + '</td>' +
+        '<td>' + tag + '</td>' +
+        '<td class="noprint"><div class="rowactions">' +
+          '<button class="btn2 tiny" data-edit="' + esc(p.name) + '">Edit</button>' +
+          '<button class="btn2 tiny danger" data-del="' + esc(p.name) + '">Delete</button>' +
+        '</div></td></tr>';
+    }).join('');
+
+    $('entries-list').innerHTML =
+      '<table class="tbl"><thead><tr><th>Name</th><th>Call</th><th class="num hide">Pledged</th>' +
+      '<th class="num hide">In</th><th>Status</th><th class="noprint"></th></tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+
+  function renderMoney() {
+    var t = totals();
+    $('money-stats').innerHTML =
+      stat('Pledged', money(t.pledged)) +
+      stat('Received', money(t.received)) +
+      stat('Outstanding', money(t.outstanding), t.outstanding > 0.005) +
+      stat('Held by us', money(t.held));
+
+    $('method-table').innerHTML =
+      '<table class="tbl"><thead><tr><th>Route</th><th class="num">Pledged</th><th class="num">Received</th><th>Treatment</th></tr></thead><tbody>' +
+      mrow('Cash at the desk', t.pCash, t.cash, 'Counted, banked, remitted') +
+      mrow('Card at the desk', t.pCard, t.card, 'Settlement, banked, remitted') +
+      mrow('CRY page', t.pCry, t.cry, 'Straight to CRY, never banked by us') +
+      '<tr><td class="nm">Gift Aid eligible</td><td class="num"></td><td class="num">' + money(t.gift) +
+      '</td><td class="sub">Declarations held on file</td></tr>' +
+      '</tbody></table>';
+
+    var due = S.preds.filter(function (p) { return outstanding(p) > 0.005; })
+      .sort(function (a, b) { return outstanding(b) - outstanding(a); });
+    $('due-list').innerHTML = !due.length
+      ? '<div class="empty">Everything pledged has been collected.</div>'
+      : '<table class="tbl"><thead><tr><th>Name</th><th>Route</th><th class="num">Outstanding</th></tr></thead><tbody>' +
+        due.map(function (p) {
+          var c = col(p.name);
+          return '<tr><td class="nm">' + esc(p.name) + '</td><td class="sub">' + esc(c.method || p.method || 'Cash') +
+            '</td><td class="num">' + money(outstanding(p)) + '</td></tr>';
+        }).join('') + '</tbody></table>';
+
+    var sel = $('c-name'), keep = sel.value;
+    sel.innerHTML = '<option value="">Choose a name</option>' + S.preds.slice()
+      .sort(function (a, b) { return a.name.localeCompare(b.name); })
+      .map(function (p) { return '<option value="' + esc(p.name) + '">' + esc(p.name) + ' (' + money(outstanding(p)) + ' due)</option>'; })
+      .join('');
+    if (keep) sel.value = keep;
+  }
+  function stat(k, v, alert) {
+    return '<div class="stat' + (alert ? ' alert' : '') + '"><div class="k">' + k + '</div><div class="v">' + v + '</div></div>';
+  }
+  function mrow(label, pledged, got, treatment) {
+    return '<tr><td class="nm">' + label + '</td><td class="num">' + money(pledged) + '</td><td class="num">' + money(got) +
+      '</td><td class="sub">' + treatment + '</td></tr>';
+  }
+
+  function renderStandings() {
+    if (!S.result) { $('standings').innerHTML = '<div class="empty">No result published yet.</div>'; return; }
+    var list = S.preds.slice();
+    list.forEach(function (p) { p._pts = scoreOf(p); });
+    list.sort(function (a, b) { return b._pts - a._pts || a.name.localeCompare(b.name); });
+    $('standings').innerHTML =
+      '<table class="tbl"><thead><tr><th class="num">#</th><th>Name</th><th>Call</th><th class="num">Points</th></tr></thead><tbody>' +
+      list.map(function (p, i) {
+        return '<tr><td class="num">' + (i + 1) + '</td><td class="nm">' + esc(p.name) +
+          '<div class="sub">' + esc(p.side) + (p.scorer ? ' &middot; ' + esc(p.scorer) : '') + '</div></td>' +
+          '<td class="score">' + p.home + '&ndash;' + p.away + '</td><td class="num">' + p._pts + '</td></tr>';
+      }).join('') + '</tbody></table>';
+  }
+
+  function renderAll() { renderStatus(); renderEntries(); renderMoney(); renderStandings(); }
+
+  /* ---------------- actions ---------------- */
+  $('save-entry').addEventListener('click', async function () {
+    var msg = $('entries-msg');
+    var name = $('e-name').value.trim();
+    if (name.length < 2) { flash(msg, 'bad', 'A name is needed.'); return; }
+    if (S.locked && !S.editing) {
+      if (!confirm('Entries are closed. Add this one anyway?')) return;
+    }
+    await loadAll();
+    var entry = {
+      name: name, side: $('e-side').value, method: $('e-method').value,
+      home: Math.max(0, Number($('e-home').value) || 0),
+      away: Math.max(0, Number($('e-away').value) || 0),
+      scorer: $('e-scorer').value.trim(),
+      pledge: Math.max(0, Number($('e-pledge').value) || 0),
+      notes: $('e-notes').value.trim(),
+      ts: Date.now()
+    };
+    var target = S.editing || name;
+    var idx = S.preds.findIndex(function (p) { return key(p.name) === key(target); });
+    if (idx > -1) {
+      entry.ts = S.preds[idx].ts || entry.ts;
+      if (S.editing && key(S.editing) !== key(name)) {
+        S.cols[key(name)] = S.cols[key(S.editing)] || S.cols[key(name)];
+        delete S.cols[key(S.editing)];
+        await put(KEY_C, S.cols);
+      }
+      S.preds[idx] = entry;
+    } else {
+      S.preds.push(entry);
+    }
+    await put(KEY_P, S.preds);
+    resetForm();
+    renderAll();
+    flash(msg, 'ok', esc(name) + ' saved, calling it ' + entry.home + ' to ' + entry.away + '.');
+  });
+
+  $('cancel-edit').addEventListener('click', resetForm);
+  function resetForm() {
+    S.editing = null;
+    ['e-name', 'e-scorer', 'e-notes'].forEach(function (id) { $(id).value = ''; });
+    $('e-home').value = 1; $('e-away').value = 1; $('e-pledge').value = 5;
+    $('e-side').value = 'Supported Living'; $('e-method').value = 'Cash';
+    $('form-title').textContent = 'Add an entry';
+    $('save-entry').textContent = 'Save entry';
+    $('cancel-edit').hidden = true;
+  }
+
+  document.addEventListener('click', async function (ev) {
+    var e = ev.target.closest('[data-edit]');
+    if (e) {
+      var p = S.preds.find(function (x) { return key(x.name) === key(e.getAttribute('data-edit')); });
+      if (!p) return;
+      S.editing = p.name;
+      $('e-name').value = p.name; $('e-side').value = p.side || 'Neutral';
+      $('e-method').value = col(p.name).method || p.method || 'Cash';
+      $('e-home').value = p.home; $('e-away').value = p.away;
+      $('e-scorer').value = p.scorer || ''; $('e-pledge').value = p.pledge || 0;
+      $('e-notes').value = p.notes || '';
+      $('form-title').textContent = 'Editing ' + p.name;
+      $('save-entry').textContent = 'Update entry';
+      $('cancel-edit').hidden = false;
+      $('e-name').scrollIntoView({ block: 'center' });
+      return;
+    }
+    var d = ev.target.closest('[data-del]');
+    if (d) {
+      var nm = d.getAttribute('data-del');
+      if (!confirm('Delete the entry for ' + nm + '? Any collection recorded against it goes too.')) return;
+      await loadAll();
+      S.preds = S.preds.filter(function (x) { return key(x.name) !== key(nm); });
+      delete S.cols[key(nm)];
+      await put(KEY_P, S.preds); await put(KEY_C, S.cols);
+      renderAll();
+      flash($('entries-msg'), 'ok', 'Entry for ' + esc(nm) + ' deleted.');
+    }
+  });
+
+  $('q').addEventListener('input', renderEntries);
+  $('filter').addEventListener('change', renderEntries);
+
+  $('save-collection').addEventListener('click', async function () {
+    var msg = $('money-msg');
+    var nm = $('c-name').value;
+    if (!nm) { flash(msg, 'bad', 'Choose whose pledge this is.'); return; }
+    var amt = Number($('c-amount').value);
+    if (!(amt >= 0)) { flash(msg, 'bad', 'Enter the amount received.'); return; }
+    await loadAll();
+    var k = key(nm), prev = col(nm);
+    S.cols[k] = {
+      received: Number((Number(prev.received || 0) + amt).toFixed(2)),
+      method: $('c-method').value,
+      by: $('c-by').value.trim() || prev.by || '',
+      gift: $('c-gift').value
+    };
+    await put(KEY_C, S.cols);
+    $('c-amount').value = '';
+    $('c-gift').value = 'N';   /* never carry a Gift Aid declaration over to the next person */
+    renderAll();
+    flash(msg, 'ok', money(amt) + ' recorded against ' + esc(nm) + ', total in from them ' + money(S.cols[k].received) + '.');
+  });
+
+  $('toggle-lock').addEventListener('click', async function () {
+    S.locked = !S.locked;
+    await put(KEY_L, S.locked);
+    renderStatus();
+    flash($('result-msg'), 'ok', S.locked ? 'Entries closed. Print the sheet now as the record.' : 'Entries reopened.');
+  });
+
+  $('print-sheet').addEventListener('click', function () {
+    showTab('entries');
+    setTimeout(function () { window.print(); }, 200);
+  });
+
+  $('settle').addEventListener('click', async function () {
+    await loadAll();
+    S.result = {
+      home: Math.max(0, Number($('r-home').value) || 0),
+      away: Math.max(0, Number($('r-away').value) || 0),
+      scorer: $('r-scorer').value.trim()
+    };
+    await put(KEY_R, S.result);
+    if (!S.locked) { S.locked = true; await put(KEY_L, true); }
+    renderAll();
+    flash($('result-msg'), 'ok', 'Result published and the table settled.');
+  });
+
+  $('unsettle').addEventListener('click', async function () {
+    if (!confirm('Remove the published result and reopen predictions?')) return;
+    S.result = null;
+    await window.storage.set(KEY_R, '', true);
+    renderAll();
+    flash($('result-msg'), 'ok', 'Result withdrawn.');
+  });
+
+  /* ---------------- data ---------------- */
+  function csvCell(v) {
+    var s = String(v == null ? '' : v);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+  function download(name, text, type) {
+    var b = new Blob([text], { type: type });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(b); a.download = name;
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+
+  $('export-csv').addEventListener('click', function () {
+    var head = ['Name', 'Service', 'Prediction', 'Pledge', 'Received', 'Outstanding', 'Method', 'Collected by', 'Gift Aid', 'Notes'];
+    var rows = S.preds.slice().sort(function (a, b) { return a.name.localeCompare(b.name); })
+      .map(function (p) {
+        var c = col(p.name);
+        return [p.name, p.side, p.home + '-' + p.away, (Number(p.pledge) || 0).toFixed(2),
+          received(p).toFixed(2), outstanding(p).toFixed(2), c.method || p.method || '',
+          c.by || '', c.gift || 'N', p.notes || ''].map(csvCell).join(',');
+      });
+    download('match-predictor-pledge-log.csv', head.join(',') + '\n' + rows.join('\n'), 'text/csv;charset=utf-8');
+    flash($('data-msg'), 'ok', 'CSV downloaded. Paste the rows into cell B5 of the Pledge Log tab.');
+  });
+
+  $('export-json').addEventListener('click', function () {
+    var payload = { exported: new Date().toISOString(), predictions: S.preds, collections: S.cols, result: S.result, locked: S.locked };
+    download('match-predictor-backup.json', JSON.stringify(payload, null, 2), 'application/json');
+    flash($('data-msg'), 'ok', 'Backup downloaded. Keep it off this device until the reconciliation is signed off.');
+  });
+
+  $('import-json').addEventListener('click', async function () {
+    var msg = $('data-msg');
+    var raw = $('import-box').value.trim();
+    if (!raw) { flash(msg, 'bad', 'Paste a backup first.'); return; }
+    var d;
+    try { d = JSON.parse(raw); } catch (e) { flash(msg, 'bad', 'That is not a readable backup file.'); return; }
+    if (!d || !Array.isArray(d.predictions)) { flash(msg, 'bad', 'No entries found in that file.'); return; }
+    if (!confirm('Replace everything on this device with ' + d.predictions.length + ' entries from the backup?')) return;
+    S.preds = d.predictions; S.cols = d.collections || {}; S.result = d.result || null; S.locked = d.locked === true;
+    await put(KEY_P, S.preds); await put(KEY_C, S.cols); await put(KEY_L, S.locked);
+    if (S.result) { await put(KEY_R, S.result); } else { await window.storage.set(KEY_R, '', true); }
+    $('import-box').value = '';
+    renderAll();
+    flash(msg, 'ok', 'Restored ' + S.preds.length + ' entries.');
+  });
+
+  $('wipe').addEventListener('click', async function () {
+    if (!confirm('Delete every entry, every collection record and the result?')) return;
+    if (!confirm('This cannot be undone. Has the backup been taken and the workbook completed?')) return;
+    S.preds = []; S.cols = {}; S.result = null; S.locked = false;
+    await put(KEY_P, []); await put(KEY_C, {}); await put(KEY_L, false);
+    await window.storage.set(KEY_R, '', true);
+    renderAll();
+    flash($('data-msg'), 'ok', 'All entries deleted. Sign off Appendix B of the organiser pack.');
+  });
+
+  /* ---------------- tabs and gate ---------------- */
+  function showTab(k) {
+    S.tab = k;
+    ['entries', 'money', 'result', 'data'].forEach(function (o) {
+      $('t-' + o).setAttribute('aria-selected', String(o === k));
+      $('p-' + o).hidden = (o !== k);
+    });
+  }
+  ['entries', 'money', 'result', 'data'].forEach(function (k) {
+    $('t-' + k).addEventListener('click', function () { showTab(k); renderAll(); });
+  });
+
+  async function unlock() {
+    if ($('pin').value.trim() !== DESK_CODE) {
+      flash($('gate-msg'), 'bad', 'That code is not right.');
+      $('pin').value = ''; $('pin').focus();
+      return;
+    }
+    $('gate').hidden = true;
+    $('console').hidden = false;
+    await loadAll();
+    if (S.result) { $('r-home').value = S.result.home; $('r-away').value = S.result.away; $('r-scorer').value = S.result.scorer || ''; }
+    renderAll();
+  }
+  $('unlock').addEventListener('click', unlock);
+  $('pin').addEventListener('keydown', function (e) { if (e.key === 'Enter') unlock(); });
+  $('pin').focus();
+})();
+</script>
+</body>
+</html>
