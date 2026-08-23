@@ -13,9 +13,12 @@ Entrants call the full time score, optionally name the first goalscorer, and ple
 | Exact full time score | 5 |
 | Right result, wrong score | 2 |
 | Goal difference bonus on top of a right result | 1 |
+| Total goals in the game | 1 |
+| First team to score | 2 |
 | First goalscorer | 3 |
+| **Maximum possible points** | **11** |
 
-Tie break: closest to the correct total goals, then earliest entry.
+Tie break: closest to the correct total goals, then earliest entry timestamp, then alphabetical by name.
 
 ## Not a betting product
 

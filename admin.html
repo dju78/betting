@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Desk Console | Aldanat Care FC Match Predictor</title>
 <meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📋</text></svg>">
 <style>
   html, body { margin: 0; padding: 0; background: #F4F6FA; }
   body { padding: 0; -webkit-text-size-adjust: 100%; }
@@ -14,12 +15,31 @@
 /* Same storage interface as the entrant page, so both read the same sheet on this device. */
 (function () {
   var mem = {};
-  function ls() { try { return window.localStorage; } catch (e) { return null; } }
+  function ls() {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        var testKey = '__test_storage__';
+        window.localStorage.setItem(testKey, '1');
+        window.localStorage.removeItem(testKey);
+        return window.localStorage;
+      }
+    } catch (e) {}
+    return null;
+  }
   if (!window.storage) {
     window.storage = {
-      get: async function (k) { var s = ls(); var v = s ? s.getItem(k) : mem[k]; return { key: k, value: v == null ? '' : v, shared: true }; },
-      set: async function (k, v) { var s = ls(); if (s) { s.setItem(k, v); } else { mem[k] = v; } return { key: k, value: v, shared: true }; },
-      delete: async function (k) { var s = ls(); if (s) { s.removeItem(k); } else { delete mem[k]; } return { key: k, deleted: true, shared: true }; },
+      get: async function (k) {
+        try { var s = ls(); var v = s ? s.getItem(k) : mem[k]; return { key: k, value: v == null ? '' : v, shared: true }; }
+        catch (e) { return { key: k, value: mem[k] == null ? '' : mem[k], shared: true }; }
+      },
+      set: async function (k, v) {
+        try { var s = ls(); if (s) { s.setItem(k, v); } else { mem[k] = v; } return { key: k, value: v, shared: true }; }
+        catch (e) { mem[k] = v; return { key: k, value: v, shared: true }; }
+      },
+      delete: async function (k) {
+        try { var s = ls(); if (s) { s.removeItem(k); } else { delete mem[k]; } return { key: k, deleted: true, shared: true }; }
+        catch (e) { delete mem[k]; return { key: k, deleted: true, shared: true }; }
+      },
       list: async function () { return { keys: [], shared: true }; }
     };
   }
@@ -137,6 +157,7 @@
     .masthead { background: #fff !important; color: #000; border-bottom: 2px solid #000; }
     .masthead h1, .masthead p, .eyebrow, .pill { color: #000 !important; }
     .pill { border: 1px solid #666; background: none !important; }
+    table.tbl th.hide, table.tbl td.hide { display: table-cell !important; }
   }
 </style>
 
@@ -483,9 +504,19 @@
 
   function renderStandings() {
     if (!S.result) { $('standings').innerHTML = '<div class="empty">No result published yet.</div>'; return; }
+    var rHome = Number(S.result.home) || 0;
+    var rAway = Number(S.result.away) || 0;
+    var rTotal = rHome + rAway;
     var list = S.preds.slice();
     list.forEach(function (p) { p._pts = scoreOf(p); });
-    list.sort(function (a, b) { return b._pts - a._pts || a.name.localeCompare(b.name); });
+    list.sort(function (a, b) {
+      if (b._pts !== a._pts) return b._pts - a._pts;
+      var aDiff = Math.abs(((Number(a.home) || 0) + (Number(a.away) || 0)) - rTotal);
+      var bDiff = Math.abs(((Number(b.home) || 0) + (Number(b.away) || 0)) - rTotal);
+      if (aDiff !== bDiff) return aDiff - bDiff;
+      if ((a.ts || 0) !== (b.ts || 0)) return (a.ts || 0) - (b.ts || 0);
+      return a.name.localeCompare(b.name);
+    });
     $('standings').innerHTML =
       '<table class="tbl"><thead><tr><th class="num">#</th><th>Name</th><th>Call</th><th class="num">Points</th></tr></thead><tbody>' +
       list.map(function (p, i) {
@@ -583,8 +614,9 @@
     var msg = $('money-msg');
     var nm = $('c-name').value;
     if (!nm) { flash(msg, 'bad', 'Choose whose pledge this is.'); return; }
-    var amt = Number($('c-amount').value);
-    if (!(amt >= 0)) { flash(msg, 'bad', 'Enter the amount received.'); return; }
+    var amtRaw = $('c-amount').value.trim();
+    var amt = Number(amtRaw);
+    if (!amtRaw || isNaN(amt) || amt < 0) { flash(msg, 'bad', 'Enter a valid amount received.'); return; }
     await loadAll();
     var k = key(nm), prev = col(nm);
     S.cols[k] = {
@@ -637,7 +669,10 @@
   /* ---------------- data ---------------- */
   function csvCell(v) {
     var s = String(v == null ? '' : v);
-    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    if (/^[=+\-@]/.test(s)) {
+      s = "'" + s;
+    }
+    return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
   }
   function download(name, text, type) {
     var b = new Blob([text], { type: type });
@@ -699,6 +734,12 @@
       $('t-' + o).setAttribute('aria-selected', String(o === k));
       $('p-' + o).hidden = (o !== k);
     });
+    if (k === 'result' && S.result) {
+      $('r-home').value = S.result.home;
+      $('r-away').value = S.result.away;
+      $('r-scorer').value = S.result.scorer || '';
+      $('r-first').value = S.result.first || 'Supported Living';
+    }
   }
   ['entries', 'money', 'result', 'data'].forEach(function (k) {
     $('t-' + k).addEventListener('click', function () { showTab(k); renderAll(); });

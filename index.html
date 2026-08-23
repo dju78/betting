@@ -7,6 +7,7 @@
 <meta name="description" content="Call the full time score for the Aldanat Care FC charity match, Supported Living v Residential, and pledge to Cardiac Risk in the Young. Free to enter.">
 <meta name="theme-color" content="#142442">
 <meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚽</text></svg>">
 <style>
   html, body { margin: 0; padding: 0; background: #F4F6FA; }
   body { padding: 0; -webkit-text-size-adjust: 100%; }
@@ -17,11 +18,30 @@
    The desk device is the master record for the event. */
 (function () {
   var mem = {};
-  function ls() { try { return window.localStorage; } catch (e) { return null; } }
+  function ls() {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        var testKey = '__test_storage__';
+        window.localStorage.setItem(testKey, '1');
+        window.localStorage.removeItem(testKey);
+        return window.localStorage;
+      }
+    } catch (e) {}
+    return null;
+  }
   window.storage = {
-    get: async function (k) { var s = ls(); var v = s ? s.getItem(k) : mem[k]; return { key: k, value: v == null ? '' : v, shared: true }; },
-    set: async function (k, v) { var s = ls(); if (s) { s.setItem(k, v); } else { mem[k] = v; } return { key: k, value: v, shared: true }; },
-    delete: async function (k) { var s = ls(); if (s) { s.removeItem(k); } else { delete mem[k]; } return { key: k, deleted: true, shared: true }; },
+    get: async function (k) {
+      try { var s = ls(); var v = s ? s.getItem(k) : mem[k]; return { key: k, value: v == null ? '' : v, shared: true }; }
+      catch (e) { return { key: k, value: mem[k] == null ? '' : mem[k], shared: true }; }
+    },
+    set: async function (k, v) {
+      try { var s = ls(); if (s) { s.setItem(k, v); } else { mem[k] = v; } return { key: k, value: v, shared: true }; }
+      catch (e) { mem[k] = v; return { key: k, value: v, shared: true }; }
+    },
+    delete: async function (k) {
+      try { var s = ls(); if (s) { s.removeItem(k); } else { delete mem[k]; } return { key: k, deleted: true, shared: true }; }
+      catch (e) { delete mem[k]; return { key: k, deleted: true, shared: true }; }
+    },
     list: async function () { return { keys: [], shared: true }; }
   };
 })();
@@ -425,9 +445,11 @@
   var KEY_R = 'aldanat:result';
 
   var state = {
-    preds: [], result: null,
-pick: { home: 1, away: 1 },
-    pledge: 5, fallback: false
+    preds: [],
+    result: null,
+    pick: { home: 1, away: 1 },
+    pledge: 5,
+    fallback: false
   };
 
   var $ = function (id) { return document.getElementById(id); };
@@ -521,8 +543,18 @@ pick: { home: 1, away: 1 },
 
     var list = state.preds.slice();
     if (state.result) {
+      var rHome = Number(state.result.home) || 0;
+      var rAway = Number(state.result.away) || 0;
+      var rTotal = rHome + rAway;
       list.forEach(function (p) { p._pts = scoreOf(p); });
-      list.sort(function (a, b) { return b._pts - a._pts || a.name.localeCompare(b.name); });
+      list.sort(function (a, b) {
+        if (b._pts !== a._pts) return b._pts - a._pts;
+        var aDiff = Math.abs(((Number(a.home) || 0) + (Number(a.away) || 0)) - rTotal);
+        var bDiff = Math.abs(((Number(b.home) || 0) + (Number(b.away) || 0)) - rTotal);
+        if (aDiff !== bDiff) return aDiff - bDiff;
+        if ((a.ts || 0) !== (b.ts || 0)) return (a.ts || 0) - (b.ts || 0);
+        return a.name.localeCompare(b.name);
+      });
     } else {
       list.sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
     }
